@@ -38,3 +38,10 @@ function weighttodensity(xs, w)
     w * (length(xs) / (b-a))
 end
 
+function transformmodel(m::FEModel, transf)
+    transformedlims = apply.(transf, extrema(m.xs))
+    xst = linspace(transformedlims..., length(m.xs))
+    ft(x) = m.f(invert(transf, x))
+
+    FEModel(f=ft, xs=xst, σ=m.σ)
+end

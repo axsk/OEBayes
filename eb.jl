@@ -7,18 +7,25 @@ dlogL(w, L) = sum(L ./ (L*w), 1) |> vec
  dkl(w, j) = sum(w[i] * log(w[i]/j[i]) for i in 1:length(w))
 ddkl(w, j) = [log(w[i]/j[i]) + 1 for i in 1:length(w)]
 
-function ebprior(m, data, γ, c=OPTCONFIG)
-    j = jeffreysprior(m)
+function objective(m, reg, data)
     L = likelihoodmat(m, data)  
-    
     nL = size(L, 1) # normalization to bound gradients
 
-    obj(w)  = ((γ > 0 ? γ *  dkl(w,j) : 0) -  logL(w,L)) / nL
-    dobj(w) = ((γ > 0 ? γ * ddkl(w,j) : 0) - dlogL(w,L)) / nL
+    #if reg < 0
+	j = jeffreysprior(m)
+	obj(w)  = reg * dkl(w,j) - logL(w,L) / nL
+	dobj(w) = reg * ddkl(w,j) - dlogL(w,L) / nL
+    #else
+	#obj(w)  = - logL(w,L) / nL
+	#dobj(w) = - dlogL(w,L) / nL
+    #end
 
-    n = length(m.xs)
+    obj, dobj
+end
 
-    opt = simplex_minimize(obj, dobj, ones(n), config=c)
+function ebprior(m, data, γ, c=OPTCONFIG)
+    obj, dobj = objective(m, γ, data)
+    opt = simplex_minimize(obj, dobj, ones(length(m.xs)), config=c)
 end
 
 
@@ -32,15 +39,16 @@ pyplot()
 using Parameters
 using Distributions
 
+abstract type Model end
+
 l2err(m, w) = norm(w - wprior(m))
 
 
 ## f + Error Model
-@with_kw struct FEModel
+@with_kw struct FEModel <: Model
     f = x->x.^2
     n = 30
     xs = linspace(1,2,n)
-    ndata = 100
     σ = 0.1
     γ = 1
     prior = TruncatedNormal(1.5, 0.1, 1, 2)
@@ -59,9 +67,10 @@ function generatedata(m::FEModel, n; smooth=true)
     datays = m.f.(dataxs) + rand(Normal(0, m.σ), n)
 end
 
+Plots.plot(m::FEModel, w) = plot(m.xs, w)
 
 ## Normal(mu, sig) Model
-@with_kw struct MuSigModel
+@with_kw struct MuSigModel <: Model
     nx = 20
     ny = 20
     bndmu = (-1,1)
@@ -83,7 +92,7 @@ Plots.plot(m::MuSigModel, w) = surface((x->x[1]).(m.xs), (x->x[2]).(m.xs), w, xl
 
 ## Poisson
 
-@with_kw struct PoissonModel
+@with_kw struct PoissonModel <: Model
     nx = 20
     xs = linspace(0.1, 5, nx)
     prior = Gamma(5,1)
@@ -98,3 +107,20 @@ likelihoodmat(m::PoissonModel, data) = [pdf(Poisson(x), d) for d in data, x in m
 generatedata(m::PoissonModel, ndata) = [rand(Poisson(rand(m.prior))) for i = 1:ndata]
 
 Plots.plot(m::PoissonModel, w) = plot(m.xs, w)
+
+
+## Transformed Model
+struct TransformedModel <: Model
+    model
+    transformation
+end
+
+struct Transformation
+    f
+    finv
+end
+
+apply(t::Transformation, x) = t.f(x)
+invert(t::Transformation, x) = t.finv(x)
+
+
