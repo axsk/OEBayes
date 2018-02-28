@@ -25,9 +25,10 @@ end
 
 function dirichletprior(m, data, alpha = 1, c=OPTCONFIG)
     L  = likelihoodmat(m, data)
+    nL = size(L, 1)
 
-    F(w)  = - ( logL(w, L) + (alpha-1) * sum(log(wk) for wk in w))
-    dF(w) = - (dlogL(w, L) + (alpha-1) * [1/wk for wk in w])
+    F(w)  = - ( logL(w, L)/nL + (alpha-1) * sum(log(wk) for wk in w))
+    dF(w) = - (dlogL(w, L)/nL + (alpha-1) * [1/wk for wk in w])
 
     wo = simplex_minimize(F,dF, ones(length(m.xs)), config=c)
 end
