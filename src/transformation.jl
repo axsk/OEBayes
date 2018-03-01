@@ -1,6 +1,8 @@
 ## Transformation of densities
 # f: X -> Y
 
+using ForwardDiff
+
 struct Transformation
     f
     finv

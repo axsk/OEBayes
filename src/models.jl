@@ -1,6 +1,7 @@
 ### Models
 using Parameters
 using Distributions
+using ForwardDiff
 
 abstract type Model end
 
@@ -47,7 +48,7 @@ jeffreysprior(m::MuSigModel) = [x[2]^-2 for x in m.xs] |> x -> (x / sum(x)) :: V
 likelihoodmat(m::MuSigModel, data) = [prod(pdf.(Normal(x[1],x[2]), d)) for d in data, x in m.xs] :: Matrix
 generatedata(m::MuSigModel, ndata) = [rand(Normal(rand(m.priormu), rand(m.priorsig)), m.nmeas) for i = 1:ndata] :: Vector
 
-Plots.plot(m::MuSigModel, w) = surface((x->x[1]).(m.xs), (x->x[2]).(m.xs), w, xlabel="μ", ylabel="σ")
+#Plots.plot(m::MuSigModel, w) = surface((x->x[1]).(m.xs), (x->x[2]).(m.xs), w, xlabel="μ", ylabel="σ")
 
 
 ## Poisson
@@ -66,4 +67,4 @@ likelihoodmat(m::PoissonModel, data) = [pdf(Poisson(x), d) for d in data, x in m
 
 generatedata(m::PoissonModel, ndata) = [rand(Poisson(rand(m.prior))) for i = 1:ndata]
 
-Plots.plot(m::PoissonModel, w) = plot(m.xs, w)
+#Plots.plot(m::PoissonModel, w) = plot(m.xs, w)

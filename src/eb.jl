@@ -1,34 +1,49 @@
-using ForwardDiff
 include(Pkg.dir("GynC") * "/src/eb/optim.jl")
+
+abstract type Regularizer end
 
  logL(w, L) = sum(log.(L * w)) 
 dlogL(w, L) = sum(L ./ (L*w), 1) |> vec
 
- dkl(w, j) = sum(w[i] * log(w[i]/j[i]) for i in 1:length(w))
-ddkl(w, j) = [log(w[i]/j[i]) + 1 for i in 1:length(w)]
+function ebprior(m::Model, data, reg::Regularizer, c=OPTCONFIG)
+    L = likelihoodmat(m, data)
+    nL = size(L, 1)
 
-function objective(m, reg, data)
-    L = likelihoodmat(m, data)  
-    nL = size(L, 1) # normalization to bound gradients
+    obj(w)  = -  logL(w, L) / nL +  f(reg, w)
+    dobj(w) = - dlogL(w, L) / nL + df(reg, w)
 
-    j = jeffreysprior(m)
-    obj(w)  = reg * dkl(w,j) - logL(w,L) / nL
-    dobj(w) = reg * ddkl(w,j) - dlogL(w,L) / nL
-
-    obj, dobj
-end
-
-function ebprior(m, data, γ, c=OPTCONFIG)
-    obj, dobj = objective(m, γ, data)
     opt = simplex_minimize(obj, dobj, ones(length(m.xs)), config=c)
 end
 
-function dirichletprior(m, data, alpha = 1, c=OPTCONFIG)
-    L  = likelihoodmat(m, data)
-    nL = size(L, 1)
+## Regularizers
 
-    F(w)  = - ( logL(w, L)/nL + (alpha-1) * sum(log(wk) for wk in w))
-    dF(w) = - (dlogL(w, L)/nL + (alpha-1) * [1/wk for wk in w])
 
-    wo = simplex_minimize(F,dF, ones(length(m.xs)), config=c)
+type ReferenceRegularizer <: Regularizer
+    j::Vector
+    γ::Number
 end
+
+ReferenceRegularizer(m::Model, γ) = ReferenceRegularizer(jeffreysprior(m), γ)
+
+f(r::ReferenceRegularizer, w) = r.γ * dkl(w, r.j)
+df(r::ReferenceRegularizer, w) = r.γ * ddkl(w, r.j)
+
+dkl(w, j) = sum(w[i] * log(w[i]/j[i]) for i in 1:length(w))
+ddkl(w, j) = [log(w[i]/j[i]) + 1 for i in 1:length(w)]
+
+
+type DirichletRegularizer <: Regularizer
+    α::Number
+end
+# Note that were missing the regularization Parameter, but its just an additive constant in logspace, not influencing the optimization
+
+f(r::DirichletRegularizer, w) = -(r.α - 1) * sum(log(wk) for wk in w) # - logpdf of Dir(α)
+df(r::DirichletRegularizer, w) = -(r.α - 1) * [1/wk for wk in w]
+
+
+type ThikonovRegularizer <: Regularizer
+    γ::Number
+end
+
+f(r::ThikonovRegularizer, w) = r.γ * sum(abs2, w)
+df(r::ThikonovRegularizer, w) = r.γ * 2 * w
