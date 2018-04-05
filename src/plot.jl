@@ -2,10 +2,13 @@ using PyPlot, LaTeXStrings
 using Seaborn
 
 
-function compareplot(m, t, wtrue, w, wt, name)
+function compareplot(m, t, wtrue, w, wt, name, x1, y1, x2, y2; figsize=(5,3), savename = "")
 
     mt   = transformmodel(m, t)
 
+    figure(figsize=figsize)
+
+    #subplot(1,2,1)
     plot(m.xs, wtrue, label="\$\\pi_{\\rm true}\$", alpha=.3, linewidth=2.2)
 
     plot(m.xs, weighttodensity(m.xs, w), label="\$\\pi_{\\rm $name}\$")
@@ -16,18 +19,21 @@ function compareplot(m, t, wtrue, w, wt, name)
     Seaborn.seaborn["despine"]()
     legend()
     
-    #xticks([0,4])
-    #xlim([0,4])
-    #yticks([0,0.5])
-    #scatter(d, zeros(d))
+    xticks(x1)
+    xlim(x1)
+    ylim(y1)
+    yticks(y1)
 
     p1 = gcf()
+    savename != "" && savefig(savename * ".pdf", bbox_inches="tight")
 
-    figure()
+ 
+    figure(figsize=figsize)
 
     t1 = pushforwarddensity(t, m.xs, wtrue)
     t2 = pushforwarddensity(t, m.xs, weighttodensity(m.xs, w))
 
+    #subplot(1,2,2)
     plot(t1..., label="\$\\varphi_* \\pi_{\\rm true}\$", alpha=.3, linewidth=2.2, linestyle="--")
     plot(t2..., label="\$\\varphi_* \\pi_{\\rm $name}\$", linestyle="--", zorder=5)
     plot(mt.xs, weighttodensity(mt.xs, wt), label="\$\\pi^\\varphi_{\\rm $name}\$")
@@ -35,16 +41,13 @@ function compareplot(m, t, wtrue, w, wt, name)
     Seaborn.seaborn["despine"]()
     legend()
 
-    #xticks([0,])
-    #xlim([0,4])
-    #yticks([0,0.1])
-    #xmax = t.f(maximum(m.xs))
-    #xlim([0, xmax])
-    #xticks([0,50])
-    #ylim([0, 0.2])
-    #yticks([0,0.2])
+    xticks(x2)
+    xlim(x2)
+    ylim(y2)
+    yticks(y2)
 
     p2 = gcf()
+    savename != "" && savefig(savename * "t.pdf", bbox_inches="tight")
 
     p1,p2
 end
