@@ -1,5 +1,3 @@
-include(Pkg.dir("GynC") * "/src/eb/optim.jl")
-
 abstract type Regularizer end
 
  logL(w, L) = sum(log.(L * w)) 
@@ -16,7 +14,6 @@ function ebprior(m::Model, data, reg::Regularizer, c=OPTCONFIG)
 end
 
 ## Regularizers
-
 
 type ReferenceRegularizer <: Regularizer
     j::Vector
