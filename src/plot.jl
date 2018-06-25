@@ -2,7 +2,7 @@ using PyPlot, LaTeXStrings
 using Seaborn
 
 
-function compareplot(m, t, wtrue, w, wt, name, x1, y1, x2, y2; figsize=(5,3), savename = "")
+function compareplot(m, t, wtrue, w, wt, name, x1, y1, x2, y2; figsize=(5,3), savename = "", savemat = false)
 
     mt   = transformmodel(m, t)
 
@@ -52,3 +52,24 @@ function compareplot(m, t, wtrue, w, wt, name, x1, y1, x2, y2; figsize=(5,3), sa
     p1,p2
 end
 
+using MAT
+
+function savemat(m,t, wtrue, w, wt, filename)
+    mt   = transformmodel(m, t)
+    xsp, wtp = pullbackdensity(t, mt.xs, weighttodensity(mt.xs,wt))
+
+    xst, piTf = pushforwarddensity(t, m.xs, wtrue)
+    xst, pif = pushforwarddensity(t, m.xs, weighttodensity(m.xs, w))
+
+    matwrite(filename, Dict(
+        "xs" => m.xs,
+        "pitrue" => wtrue,
+        "pi" => weighttodensity(m.xs, w),
+        "pitp" => weighttodensity(m.xs, w),
+        "xst" => xst,
+        "pitrue" => piTf,
+        "pif" => pif,
+        "pit" => weighttodensity(mt.xs, wt)
+    ))
+
+end
