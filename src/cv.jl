@@ -2,7 +2,7 @@ import MLBase
 
 function cvscore(m, d, estimator::Function, k=length(d))
     L = likelihoodmat(m, d)
-    score(w, i) = logL(w, L[:,i])   # logL(priorest_[-i] | data_[i])
+    score(w, i) = logL(w, L[i,:])   # logL(priorest_[-i] | data_[i])
     scores = MLBase.cross_validate(i->estimator(d[i]), score, length(d), MLBase.Kfold(length(d), k))
     mean(scores)
 end
