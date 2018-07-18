@@ -7,8 +7,8 @@ function cvscore(m, d, estimator::Function, k=length(d))
     mean(scores)
 end
 
-" Given model m, data d and a list of gammas, return the (cv-)best regularizer"
-function cvreference(m, d, gammas; k=length(d), c = OptConfig())
+" Given model m, data and a list of gammas, return the (cv-)best regularizer"
+function cvreference(m, data, gammas; k=length(d), c = OptConfig())
     j = jeffreysprior(m)
     regs = [ReferenceRegularizer(j, gamma) for gamma in gammas]
     cvs = [cvscore(m, data, d->ebprior(m, d, r, c), k) for r in regs]

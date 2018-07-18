@@ -5,6 +5,7 @@ dlogL(w, L) = sum(L ./ (L*w), 1) |> vec
 
 function ebprior(m::Model, data, reg::Regularizer, c=OptConfig())
     L = likelihoodmat(m, data)
+    @assert !haszerorow(L)
     nL = size(L, 1)
 
     obj(w)  = -  logL(w, L) / nL +  f(reg, w)
@@ -12,6 +13,8 @@ function ebprior(m::Model, data, reg::Regularizer, c=OptConfig())
 
     opt = simplex_minimize(obj, dobj, ones(length(m.xs)), config=c)
 end
+
+haszerorow(L) = any(all(L[i,:].<=0) for i in 1:size(L,1))
 
 ## Regularizers
 
