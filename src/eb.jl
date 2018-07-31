@@ -18,21 +18,22 @@ haszerorow(L) = any(all(L[i,:].<=0) for i in 1:size(L,1))
 
 ## Regularizers
 
-type ReferenceRegularizer <: Regularizer
+struct ReferenceRegularizer <: Regularizer
     j::Vector
     γ::Number
+    referencemeasure::Vector
 end
 
-ReferenceRegularizer(m::Model, γ) = ReferenceRegularizer(jeffreysprior(m), γ)
+ReferenceRegularizer(m::Model, γ) = ReferenceRegularizer(jeffreysprior(m), γ, referencemeasure(m))
 
-f(r::ReferenceRegularizer, w) = r.γ * dkl(w, r.j)
-df(r::ReferenceRegularizer, w) = r.γ * ddkl(w, r.j)
+f(r::ReferenceRegularizer, w) = r.γ * dkl(w, r.j, r.referencemeasure)
+df(r::ReferenceRegularizer, w) = r.γ * ddkl(w, r.j, r.referencemeasure)
 
-dkl(w, j) = sum(w[i] * log(w[i]/j[i]) for i in 1:length(w))
-ddkl(w, j) = [log(w[i]/j[i]) + 1 for i in 1:length(w)]
+dkl(w, j, ref) = sum(w[i] * log(w[i]*ref[i]/j[i]) for i in 1:length(w))
+ddkl(w, j, ref) = [log(w[i]*ref[i]/j[i]) + 1 for i in 1:length(w)]
 
 
-type DirichletRegularizer <: Regularizer
+struct DirichletRegularizer <: Regularizer
     α::Number
 end
 # Note that were missing the regularization Parameter, but its just an additive constant in logspace, not influencing the optimization
@@ -41,7 +42,7 @@ f(r::DirichletRegularizer, w) = -(r.α - 1) * sum(log(wk) for wk in w) # - logpd
 df(r::DirichletRegularizer, w) = -(r.α - 1) * [1/wk for wk in w]
 
 
-type ThikonovRegularizer <: Regularizer
+struct ThikonovRegularizer <: Regularizer
     γ::Number
 end
 
