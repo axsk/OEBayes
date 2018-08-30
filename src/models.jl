@@ -5,7 +5,8 @@ using ForwardDiff
 
 abstract type Model end
 
-referencemeasure(m::Model) = ones(length(m.xs))
+" assign uniform density as fallback for all models"
+sampledensity(m::Model) = ones(length(m.xs))
 
 l2err(m, w) = norm(w - wprior(m))
 wprior(m::Model, prior) = normalize(pdf.(prior, m.xs), 1)

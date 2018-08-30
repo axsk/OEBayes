@@ -21,13 +21,13 @@ haszerorow(L) = any(all(L[i,:].<=0) for i in 1:size(L,1))
 struct ReferenceRegularizer <: Regularizer
     j::Vector
     γ::Number
-    referencemeasure::Vector
+    sampledensity::Vector
 end
 
-ReferenceRegularizer(m::Model, γ) = ReferenceRegularizer(jeffreysprior(m), γ, referencemeasure(m))
+ReferenceRegularizer(m::Model, γ) = ReferenceRegularizer(jeffreysprior(m), γ, sampledensity(m))
 
-f(r::ReferenceRegularizer, w) = r.γ * dkl(w, r.j, r.referencemeasure)
-df(r::ReferenceRegularizer, w) = r.γ * ddkl(w, r.j, r.referencemeasure)
+f(r::ReferenceRegularizer, w) = r.γ * dkl(w, r.j, r.sampledensity)
+df(r::ReferenceRegularizer, w) = r.γ * ddkl(w, r.j, r.sampledensity)
 
 dkl(w, j, ref) = sum(w[i] * log(w[i]*ref[i]/j[i]) for i in 1:length(w))
 ddkl(w, j, ref) = [log(w[i]*ref[i]/j[i]) + 1 for i in 1:length(w)]
