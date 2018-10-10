@@ -1,5 +1,5 @@
 using PyPlot, LaTeXStrings
-using Seaborn
+#using Seaborn
 
 
 function compareplot(m, t, wtrue, w, wt, name, x1, y1, x2, y2; figsize=(5,3), savename = "", savemat = false)
@@ -16,7 +16,7 @@ function compareplot(m, t, wtrue, w, wt, name, x1, y1, x2, y2; figsize=(5,3), sa
     xsp, wtp = pullbackdensity(t, mt.xs, weighttodensity(mt.xs,wt))
     plot(xsp, wtp, label="\$\\varphi_*^{-1} \\pi^\\varphi_{\\rm $name}\$", linestyle="--")
 
-    Seaborn.seaborn["despine"]()
+    #Seaborn.seaborn["despine"]()
     legend()
     
     xticks(x1)
@@ -38,7 +38,7 @@ function compareplot(m, t, wtrue, w, wt, name, x1, y1, x2, y2; figsize=(5,3), sa
     plot(t2..., label="\$\\varphi_* \\pi_{\\rm $name}\$", linestyle="--", zorder=5)
     plot(mt.xs, weighttodensity(mt.xs, wt), label="\$\\pi^\\varphi_{\\rm $name}\$")
 
-    Seaborn.seaborn["despine"]()
+    #Seaborn.seaborn["despine"]()
     legend()
 
     xticks(x2)
@@ -52,7 +52,7 @@ function compareplot(m, t, wtrue, w, wt, name, x1, y1, x2, y2; figsize=(5,3), sa
     p1,p2
 end
 
-using MAT
+#=using MAT
 
 function savemat(m,t, wtrue, w, wt, filename)
     mt   = transformmodel(m, t)
@@ -73,3 +73,4 @@ function savemat(m,t, wtrue, w, wt, filename)
     ))
 
 end
+=#

@@ -1,7 +1,7 @@
 using NLopt
 using Parameters
 
-@with_kw type OptConfig
+@with_kw struct OptConfig
     XTOLREL = 0
     XTOLABS = 0
     FTOLREL = 0
@@ -32,11 +32,9 @@ function simplex_minimize(f, df, x0; config=OptConfig())
         s = softmax(x)
         fs = f(s)
 
-        if lasts != s && norm(lasts - s, Inf) < XTOLABS
+        if (lasts != s) && (norm(lasts - s, Inf) < XTOLABS)
             force_stop!(opt)
         end
-
-        lasts = s
 
         if length(g) > 0
             g[:] = softmaxjac(s) * df(s)
@@ -49,7 +47,7 @@ function simplex_minimize(f, df, x0; config=OptConfig())
         end
 
         if any(isnan.(s)) || any(isnan.(g)) 
-            warn("NaN encountered")
+            @warn("NaN encountered")
             force_stop!(opt)
         end
 
@@ -65,17 +63,19 @@ function simplex_minimize(f, df, x0; config=OptConfig())
     maxeval!(opt, MAXEVAL)
    
     minf, minx, ret = optimize(opt, x0)
+    #@show ret
+    #@show NLopt.errmsg(opt)
 
     softmax(minx)
 end
 
 function softmax(x)
-    x = x - maximum(x) # avoid overflow of exp
+    x = x .- maximum(x) # avoid overflow of exp
     r = exp.(x)
     r ./ sum(r)
 end
 
 function softmaxjac(s)
     # s is already the softmax here
-    diagm(s) - s * s'
+    diagm(0=>s) - s * s'
 end

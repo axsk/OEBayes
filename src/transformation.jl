@@ -35,14 +35,14 @@ end
 
 function weighttodensity(xs, w)
     a, b = extrema(xs)
-    @assert isapprox(xs, linspace(a,b,length(xs)))
+    @assert isapprox(xs, LinRange(a,b,length(xs)))
     @assert isapprox(sum(w), 1)
     w * (length(xs) / (b-a))
 end
 
 function transformmodel(m::FEModel, transf)
-    transformedlims = apply.(transf, extrema(m.xs))
-    xst = linspace(transformedlims..., length(m.xs))
+    transformedlims = [apply(transf,x) for x in extrema(m.xs)]
+    xst = LinRange(transformedlims..., length(m.xs))
     ft(x) = m.f(invert(transf, x))
 
     FEModel(f=ft, xs=xst, σ=m.σ)

@@ -2,6 +2,7 @@
 using Parameters
 using Distributions
 using ForwardDiff
+using LinearAlgebra
 
 abstract type Model end
 
