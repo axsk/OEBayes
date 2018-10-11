@@ -1,6 +1,4 @@
 using NLopt
-using Parameters
-
 @with_kw struct OptConfig
     XTOLREL = 0
     XTOLABS = 0
@@ -36,6 +34,8 @@ function simplex_minimize(f, df, x0; config=OptConfig())
             force_stop!(opt)
         end
 
+        lasts = s
+
         if length(g) > 0
             g[:] = softmaxjac(s) * df(s)
         end
@@ -58,13 +58,11 @@ function simplex_minimize(f, df, x0; config=OptConfig())
     min_objective!(opt, objective)
 
     xtol_rel!(opt, XTOLREL)
-    #xtol_abs!(opt, XTOLABS)
+    #xtol_abs!(opt, XTOLABS) # taken care of by own check on transformed space
     ftol_rel!(opt, FTOLREL)
     maxeval!(opt, MAXEVAL)
    
     minf, minx, ret = optimize(opt, x0)
-    #@show ret
-    #@show NLopt.errmsg(opt)
 
     softmax(minx)
 end
