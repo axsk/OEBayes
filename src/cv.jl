@@ -16,3 +16,4 @@ function cvreference(m, data, gammas; k=length(d), c = OptConfig())
     in(gammas[i], extrema(gammas)) && warn("extremal choice of gamma, consider extending range") 
     regs[i], cvs
 end
+

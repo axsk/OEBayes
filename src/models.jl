@@ -33,8 +33,29 @@ function generatedata(m::FEModel, prior, n; smooth=true)
     datays = m.f.(dataxs) + rand(Normal(0, m.σ), n)
 end
 
+## Binomial Model for Bin(n,p)
+## Given data, compute likelihood of possible p values
+struct BinomialModel <: Model
+    n # number of trials
+    xs # space of possible p
+end
 
-## Normal(mu, sig) Model
+jeffreysprior(m::BinomialModel) = [1 / sqrt(p * (1-p)) for p in m.xs]
+likelihoodmat(m::BinomialModel, data) = [pdf(Distributions.Binomial(m.n, p), d) for d in data, p in m.xs]
+
+## Model for custom jeffreysprior and likelihoodfunction
+struct CustomModel <: Model
+    xs # parameterspace
+    likelihood # (x, d) -> R
+    jeffreysprior # (x) -> R
+end
+
+jeffreysprior(m::CustomModel) = [m.jeffreysprior(x) for x in xs]
+likelihoodmat(m::CustomModel, data) = [m.likelihood(x,d) for d in data, x in m.xs]
+
+
+## Estimate parameters for a normal model
+## d_m ~ Normal(μ_m, σ_m), (μ_m, σ_m) ~ π_erp
 @with_kw struct MuSigModel <: Model
     nx = 20
     ny = 20
