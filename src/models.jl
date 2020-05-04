@@ -22,7 +22,7 @@ end
 FEModel(; f=x->x.^2, n=30, xs=linspace(1,2,n), σ=0.1) = FEModel(f,xs,σ)
 
 jeffreysprior(m::FEModel) = normalize([ForwardDiff.derivative(m.f, x) for x in m.xs], 1)
-likelihoodmat(m::FEModel, data) = [pdf(Normal(y, m.σ), d) for d in data, y in m.f.(m.xs)]
+likelihoodmat(m::FEModel, data) = [pdf(Normal(y, m.σ), d) for d in data, y in m.f.(m.xs)] |> testnan
 
 function generatedata(m::FEModel, prior, n; smooth=true)
     if smooth

@@ -37,7 +37,7 @@ function simplex_minimize(f, df, x0; config=OptConfig())
         lasts = s
 
         if length(g) > 0
-            g[:] = softmaxjac(s) * df(s)
+            g[:] = softmaxjac(s) * df(s) |> testnan
         end
 
         if DEBUG
@@ -47,7 +47,7 @@ function simplex_minimize(f, df, x0; config=OptConfig())
         end
 
         if any(isnan.(s)) || any(isnan.(g)) 
-            @warn("NaN encountered")
+            @warn("NaN encountered in optimization [$(sum(s)), $(sum(g)), $(sum(df(s)))]")
             force_stop!(opt)
         end
 

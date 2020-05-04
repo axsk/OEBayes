@@ -1,7 +1,7 @@
 abstract type Regularizer end
 
  logL(w, L) = sum(log.(L * w)) 
-dlogL(w, L) = sum(L ./ (L*w), dims=1) |> vec
+dlogL(w, L) = sum(L ./ (L*w), dims=1) |> vec |> testnan
 
 function ebprior(m::Model, data, reg::Regularizer, c=OptConfig())
     L = likelihoodmat(m, data)
