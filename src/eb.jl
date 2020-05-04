@@ -5,13 +5,14 @@ dlogL(w, L) = sum(L ./ (L*w), dims=1) |> vec
 
 function ebprior(m::Model, data, reg::Regularizer, c=OptConfig())
     L = likelihoodmat(m, data)
-    @assert !haszerorow(L)
-    nL = size(L, 1)
+    ebprior(L, reg, c)
+end
 
-    obj(w)  = -  logL(w, L) / nL +  f(reg, w)
-    dobj(w) = - dlogL(w, L) / nL + df(reg, w)
-
-    opt = simplex_minimize(obj, dobj, ones(length(m.xs)), config=c)
+function ebprior(L::Matrix, reg::Regularizer, c = OptConfig())
+    nd, nx = size(L)
+    obj(w)  = -  logL(w, L) / nd +  f(reg, w)
+    dobj(w) = - dlogL(w, L) / nd + df(reg, w)
+    opt = simplex_minimize(obj, dobj, ones(nx), config=c)
 end
 
 haszerorow(L) = any(all(L[i,:].<=0) for i in 1:size(L,1))

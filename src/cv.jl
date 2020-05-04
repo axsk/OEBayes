@@ -17,3 +17,33 @@ function cvreference(m, data, gammas; k=length(d), c = OptConfig())
     regs[i], cvs
 end
 
+
+# TODO: cleanup
+# above and below code do the same
+# bottom one is cleaner but works only for the ReferenceRegularizer.
+
+import Optim 
+
+function cvreference(m, d, min, max, ; c = OptConfig(), kwargs...)
+
+    L = likelihoodmat(m, d)
+
+    function gammascore(gamma)  
+        score = 0
+        for i=1:length(d)
+            inds = collect(1:length(d))
+            deleteat!(inds, i)
+            w = ebprior(L[inds, :], ReferenceRegularizer(m, gamma), c)
+            score += logL(w, L[[i],:])
+        end
+        score / length(d)
+    end
+
+    opt = Optim.optimize(x->-gammascore(x[1]) - 1.40, min, max, Optim.GoldenSection(); kwargs...)
+    opt.minimizer, opt
+end
+
+
+
+
+
