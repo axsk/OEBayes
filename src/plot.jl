@@ -1,5 +1,5 @@
 using PyPlot, LaTeXStrings
-#using Seaborn
+using Seaborn
 
 
 function compareplot(m, t, wtrue, w, wt, name, x1, y1, x2, y2; figsize=(5,3), savename = "", savemat = false)
@@ -11,13 +11,13 @@ function compareplot(m, t, wtrue, w, wt, name, x1, y1, x2, y2; figsize=(5,3), sa
     #subplot(1,2,1)
     plot(m.xs, wtrue, label="\$\\pi^*\$", alpha=.3, linewidth=2.2)
 
-    plot(m.xs, weighttodensity(m.xs, w), label="\$\\pi^{\\rm $name}\$")
+    plot(m.xs, weighttodensity(m.xs, w), label="\$\\pi_{\\rm $name}\$")
 
     xsp, wtp = pullbackdensity(t, mt.xs, weighttodensity(mt.xs,wt))
-    plot(xsp, wtp, label="\$\\varphi_*^{-1} \\pi_\\varphi^{\\rm $name}\$", linestyle="--")
+    plot(xsp, wtp, label="\$\\varphi_*^{-1} \\pi^\\varphi_{\\rm $name}\$", linestyle="--")
 
-    #Seaborn.seaborn["despine"]()
-    legend()
+    Seaborn.seaborn.despine()
+    legend(ncol=1)#, numpoints=10)
     
     xticks(x1)
     xlim(x1)
@@ -35,11 +35,11 @@ function compareplot(m, t, wtrue, w, wt, name, x1, y1, x2, y2; figsize=(5,3), sa
 
     #subplot(1,2,2)
     plot(t1..., label="\$\\varphi_* \\pi^*\$", alpha=.3, linewidth=2.2, linestyle="--")
-    plot(t2..., label="\$\\varphi_* \\pi^{\\rm $name}\$", linestyle="--", zorder=5)
-    plot(mt.xs, weighttodensity(mt.xs, wt), label="\$\\pi_\\varphi^{\\rm $name}\$")
+    plot(t2..., label="\$\\varphi_* \\pi_{\\rm $name}\$", linestyle="--", zorder=5)
+    plot(mt.xs, weighttodensity(mt.xs, wt), label="\$\\pi^\\varphi_{\\rm $name}\$")
 
-    #Seaborn.seaborn["despine"]()
-    legend()
+    Seaborn.seaborn.despine()
+    legend(ncol=1)#, numpoints=3)
 
     xticks(x2)
     xlim(x2)
