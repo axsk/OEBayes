@@ -43,9 +43,7 @@ function simplex_minimize(f, df, x0; config=OptConfig())
         last = s
 
         if length(g) > 0
-            #g[:] = softmaxjac(s) * df(s) |> testnan
-            #g[:] = softmaxjac!(s, jac) * df(s) |> testnan
-            mul!(g, softmaxjac(s, jac), df(s)) |> testnan
+            g[:] = softmaxjac!(s, jac) * df(s) |> testnan
         end
 
         if DEBUG
@@ -95,9 +93,4 @@ function softmaxjac!(s,ds)
         end
     end
     ds
-end
-
-function softmaxjac(s)
-    # s is already the softmax here
-    diagm(0=>s) - s * s'
 end
