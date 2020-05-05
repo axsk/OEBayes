@@ -24,20 +24,28 @@ function simplex_minimize(f, df, x0; config=OptConfig())
 
     x0   = log.(x0)
 
-    lasts = fill(NaN, length(x0))
+    last = fill(NaN, length(x0))
+    jac  = fill(NaN, length(x0), length(x0))
 
     function objective(x,g)
         s = softmax(x)
         fs = f(s)
 
-        if (lasts != s) && (norm(lasts - s, Inf) < XTOLABS)
+        delta = last - s
+
+        # check for tolerances on the transformed simplex space
+        if (last != s) && # if lasts=s continue, since some optimizers re-evaluate points
+            (norm(delta, Inf) < XTOLABS) ||
+            (norm(delta ./ last, Inf) < XTOLREL)
             force_stop!(opt)
         end
 
-        lasts = s
+        last = s
 
         if length(g) > 0
-            g[:] = softmaxjac(s) * df(s) |> testnan
+            #g[:] = softmaxjac(s) * df(s) |> testnan
+            #g[:] = softmaxjac!(s, jac) * df(s) |> testnan
+            mul!(g, softmaxjac(s, jac), df(s)) |> testnan
         end
 
         if DEBUG
@@ -57,12 +65,14 @@ function simplex_minimize(f, df, x0; config=OptConfig())
 
     min_objective!(opt, objective)
 
-    xtol_rel!(opt, XTOLREL)
-    #xtol_abs!(opt, XTOLABS) # taken care of by own check on transformed space
+    # xtol_rel!(opt, XTOLREL) taken care of by own check on transformed space
+    # xtol_abs!(opt, XTOLABS) 
     ftol_rel!(opt, FTOLREL)
     maxeval!(opt, MAXEVAL)
    
     minf, minx, ret = optimize(opt, x0)
+
+    (opt.numevals == MAXEVAL) && @warn("Simplex optimization did not converge")
 
     softmax(minx)
 end
@@ -71,6 +81,20 @@ function softmax(x)
     x = x .- maximum(x) # avoid overflow of exp
     r = exp.(x)
     r ./ sum(r)
+end
+
+# ds/dx = diagm(s) - s*s'
+function softmaxjac!(s,ds)
+    n = length(s)
+    for j=1:n
+        for i=1:n
+            ds[i,j] = - s[i] * s[j]
+            if i == j
+                ds[i,i] += s[i]
+            end
+        end
+    end
+    ds
 end
 
 function softmaxjac(s)
