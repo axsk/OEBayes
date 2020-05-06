@@ -25,7 +25,6 @@ function simplex_minimize(f, df, x0; config=OptConfig())
     x0   = log.(x0)
 
     last = fill(NaN, length(x0))
-    jac  = fill(NaN, length(x0), length(x0))
 
     function objective(x,g)
         s = softmax(x)
@@ -43,7 +42,7 @@ function simplex_minimize(f, df, x0; config=OptConfig())
         last = s
 
         if length(g) > 0
-            g[:] = softmaxjac!(s, jac) * df(s) |> testnan
+            objectivejac!(g, s, df(s)) |> testnan
         end
 
         if DEBUG
@@ -81,16 +80,15 @@ function softmax(x)
     r ./ sum(r)
 end
 
-# ds/dx = diagm(s) - s*s'
-function softmaxjac!(s,ds)
-    n = length(s)
-    for j=1:n
-        for i=1:n
-            ds[i,j] = - s[i] * s[j]
-            if i == j
-                ds[i,i] += s[i]
-            end
-        end
-    end
-    ds
+
+# optimized (inplace, matrix-free) version of
+# dobj/dw = df/ds * ds/dw 
+# where obj(w) = f(s(w))
+# and ds/dw = diagm(s) - s * s'
+function objectivejac!(g::Vector, s::Vector, df::Vector)
+     d = dot(s,df)
+     for i=1:length(g)
+        g[i] = s[i] * (df[i]-d)
+     end
+     g
 end
