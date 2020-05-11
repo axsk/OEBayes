@@ -5,7 +5,7 @@ using NLopt
     FTOLREL = 0
     CTOLABS = 0
     DEBUG   = false
-    MAXEVAL = 0
+    MAXEVAL = 10000
     METHOD = :softmax
     OPTIMIZER = :LD_MMA
 end
@@ -66,7 +66,7 @@ function simplex_minimize(f, df, x0; config=OptConfig())
     # xtol_abs!(opt, XTOLABS) 
     ftol_rel!(opt, FTOLREL)
     maxeval!(opt, MAXEVAL)
-   
+
     minf, minx, ret = optimize(opt, x0)
 
     (opt.numevals == MAXEVAL) && @warn("Simplex optimization did not converge")
